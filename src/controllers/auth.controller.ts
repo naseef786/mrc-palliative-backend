@@ -1,49 +1,62 @@
+import User from "../models/User";
 import bcrypt from "bcryptjs";
-import Admin from "../models/Admin";
-import Volunteer from "../models/Volunteer";
 import { signToken } from "../utils/jwt";
+import { Request, Response } from "express";
 
-export const login = async (req: any, res: any) => {
-  const { email, password, role } = req.body;
+export const signup = async (req: Request, res: Response) => {
+  const { name, email, password, role, phone, bloodGroup, dob, address, emergencyContact } = req.body;
 
-  const Model = role === "admin" ? Admin : Volunteer;
-  const user = await Model.findOne({ email });
+  try {
+    if (!name || !email || !password || !phone) {
+      return res.status(400).json({ message: "Name, email, password and phone required" });
+    }
 
-  if (!user) return res.status(400).json({ message: "User not found" });
+    const exists = await User.findOne({ email });
+    if (exists) return res.status(400).json({ message: "Email already exists" });
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch)
-    return res.status(400).json({ message: "Invalid credentials" });
+    const hashed = await bcrypt.hash(password, 10);
 
-  const token = signToken({
-    id: user._id,
-    role: user.role,
-  });
+    const safeRole: "admin" | "volunteer" = role === "admin" ? "admin" : "volunteer";
 
-  res.json({
-    token,
-    user: {
-      id: user._id,
-      name: user.name,
-      role: user.role,
-    },
-  });
+    const user = await User.create({
+      name,
+      email,
+      password: hashed,
+      role: safeRole,
+      phone,
+      bloodGroup,
+      dob,
+      address,
+      emergencyContact,
+      totalServices: role === "volunteer" ? 0 : undefined,
+    });
+
+    const { password: _pass, ...userSafe } = user.toObject();
+
+    return res.status(201).json({ message: "User created", user: userSafe });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
-export const registerVolunteer = async (req: any, res: any) => {
-  const { name, email, password } = req.body;
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  console.log(email, password);
 
-  const exists = await Volunteer.findOne({ email });
-  if (exists)
-    return res.status(400).json({ message: "Email already exists" });
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "User not found" });
 
-  const hashed = await bcrypt.hash(password, 10);
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-  const volunteer = await Volunteer.create({
-    name,
-    email,
-    password: hashed,
-  });
+    const token = signToken({ id: user._id, role: user.role });
 
-  res.json(volunteer);
+    const { password: _pass, ...userSafe } = user.toObject();
+    return res.json({ token, user: userSafe });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };

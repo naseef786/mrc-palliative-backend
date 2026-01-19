@@ -1,12 +1,12 @@
-import Volunteer from "../models/Volunteer";
+import User from "../models/User";
 
 export const getVolunteers = async (_: any, res: any) => {
-  const volunteers = await Volunteer.find().select("-password");
+  const volunteers = await User.find().select("-password");
   res.json(volunteers);
 };
 
 export const updateVolunteer = async (req: any, res: any) => {
-  const volunteer = await Volunteer.findByIdAndUpdate(
+  const volunteer = await User.findByIdAndUpdate(
     req.params.id,
     req.body,
     { new: true }
@@ -16,6 +16,6 @@ export const updateVolunteer = async (req: any, res: any) => {
 };
 
 export const deleteVolunteer = async (req: any, res: any) => {
-  await Volunteer.findByIdAndDelete(req.params.id);
+  await User.findByIdAndDelete(req.params.id);
   res.json({ success: true });
 };
