@@ -1,18 +1,21 @@
 import { Router } from "express";
 import {
   getPatients,
+  getPatientById,
   createPatient,
   updatePatient,
   deletePatient,
 } from "../controllers/patient.controller";
-import { auth } from "../middleware/auth.middleware";
-import { role } from "../middleware/role.middleware";
+// import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.get("/", auth, getPatients);
-router.post("/", auth, role(["admin"]), createPatient);
-router.put("/:id", auth, role(["admin"]), updatePatient);
-router.delete("/:id", auth, role(["admin"]), deletePatient);
+// router.use(authMiddleware);
+
+router.get("/", getPatients);
+router.get("/:id", getPatientById);
+router.post("/", createPatient);
+router.put("/:id", updatePatient);
+router.delete("/:id", deletePatient);
 
 export default router;
