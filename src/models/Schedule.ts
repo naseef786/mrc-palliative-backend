@@ -1,25 +1,53 @@
 import { Schema, model, Types } from "mongoose";
 
-const ScheduleSchema = new Schema(
+export interface ISchedule {
+  patient: Types.ObjectId;
+  assignedVolunteer?: Types.ObjectId | null;
+
+  date: string;
+  info?: string;
+  remarks?: string;
+  message?: string;
+  otherInfo?: string;
+
+  status: "pending" | "in-progress" | "completed" | "expired";
+
+  createdBy: Types.ObjectId;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const ScheduleSchema = new Schema<ISchedule>(
   {
-    patient: { type: Types.ObjectId, ref: "Patient" },
-    task: String,
-    date: String,
-    time: String,
-    notes: String,
-    priority: {
-      type: String,
-      enum: ["low", "medium", "critical"],
-      default: "medium",
+    patient: { type: Schema.Types.ObjectId, ref: "Patient", required: true },
+
+    assignedVolunteer: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
+
+    date: { type: String, required: true },
+
+    info: String,
+    remarks: String,
+    message: String,
+    otherInfo: String,
+
     status: {
       type: String,
       enum: ["pending", "in-progress", "completed", "expired"],
       default: "pending",
     },
-    volunteer: { type: Types.ObjectId, ref: "Volunteer", default: null },
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
-export default model("Schedule", ScheduleSchema);
+export default model<ISchedule>("Schedule", ScheduleSchema);

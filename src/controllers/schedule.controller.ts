@@ -1,40 +1,127 @@
+import { Request, Response } from "express";
 import Schedule from "../models/Schedule";
+import { log } from "node:console";
 
-export const getSchedules = async (_: any, res: any) => {
-  const schedules = await Schedule.find()
-    .populate("patient")
-    .populate("volunteer");
-  res.json(schedules);
+// CREATE
+export const createSchedule = async (req: any, res: Response) => {
+  log("Creating schedule with data:", req.body, "by user:", req.user.id);
+  const schedule = await Schedule.create({
+    ...req.body,
+    createdBy: req.user.id,
+    patient: req.body.patientId,
+  });
+
+  res.status(201).json(schedule);
 };
 
-export const createSchedule = async (req: any, res: any) => {
-  const schedule = await Schedule.create(req.body);
-  res.json(schedule);
+export const getSchedules = async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 10, 50);
+    const search = String(req.query.q || "").trim();
+
+    /* ================= BUILD SEARCH QUERY ================= */
+    const query: any = {};
+
+    if (search) {
+      query.$or = [
+        { info: { $regex: search, $options: "i" } },
+        { message: { $regex: search, $options: "i" } },
+        { remarks: { $regex: search, $options: "i" } },
+        { otherInfo: { $regex: search, $options: "i" } },
+      ];
+    }
+    console.log(search);
+
+    /* ================= FETCH DATA ================= */
+    const [schedules, total] = await Promise.all([
+      Schedule.find(query)
+        .populate({
+          path: "patient",
+          match: search
+            ? { name: { $regex: search, $options: "i" } }
+            : {},
+        })
+        .populate("assignedVolunteer", "name")
+        .sort({ date: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+
+      Schedule.countDocuments(query),
+    ]);
+
+    /* ================= FILTER NULL PATIENTS (WHEN SEARCHING) ================= */
+    const filteredSchedules = search
+      ? schedules.filter((s) => s.patient !== null)
+      : schedules;
+    console.log({
+      data: filteredSchedules,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+    });
+
+    res.json({
+      data: filteredSchedules,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+    });
+  } catch (error) {
+    console.error("Get schedules error:", error);
+    res.status(500).json({ message: "Failed to fetch schedules" });
+  }
 };
 
-export const updateSchedule = async (req: any, res: any) => {
+// UPDATE
+export const updateSchedule = async (req: Request, res: Response) => {
+  console.log(req?.body, req.params?.id);
+
   const schedule = await Schedule.findByIdAndUpdate(
     req.params.id,
     req.body,
-    { new: true }
+
+    { new: true, runValidators: true }
   );
+
   res.json(schedule);
 };
 
-export const assignVolunteer = async (req: any, res: any) => {
+// DELETE
+export const deleteSchedule = async (req: Request, res: Response) => {
+  await Schedule.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
+};
+
+// ASSIGN / UNASSIGN
+export const assignSelf = async (req: any, res: Response) => {
+  console.log(JSON?.stringify(req.params));
   const schedule = await Schedule.findByIdAndUpdate(
     req.params.id,
-    { volunteer: req.user.id, status: "in-progress" },
+    {
+      assignedVolunteer: req.user.id,
+      status: "in-progress",
+    },
     { new: true }
   );
+  console.log("Assigned schedule:", schedule);
   res.json(schedule);
 };
 
-export const unassignVolunteer = async (req: any, res: any) => {
+export const unassignSelf = async (req: Request, res: Response) => {
   const schedule = await Schedule.findByIdAndUpdate(
     req.params.id,
-    { volunteer: null, status: "pending" },
+    {
+      assignedVolunteer: null,
+      status: "pending",
+    },
     { new: true }
   );
+
   res.json(schedule);
 };
