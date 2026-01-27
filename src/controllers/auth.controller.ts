@@ -4,7 +4,6 @@ import { signToken } from "../utils/jwt";
 import { Request, Response } from "express";
 
 export const signup = async (req: Request, res: Response) => {
-  console.log("{{{{{{{{{{{{{{{{{{{{{{{{{", req.body);
 
   const { name, email, password, role, phone, bloodGroup, dob, address, emergencyContact } = req.body;
 
@@ -45,7 +44,7 @@ export const signup = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   console.log(email, password);
-
+  // console.log("Mongoose readyState:", mongoose.connection.readyState);
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found" });
