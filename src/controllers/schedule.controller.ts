@@ -5,6 +5,7 @@ import { log } from "node:console";
 // CREATE
 export const createSchedule = async (req: any, res: Response) => {
   log("Creating schedule with data:", req.body, "by user:", req.user.id);
+  console.log(process.env.DB_NAME, process.env.MONGO_URI,);
   const schedule = await Schedule.create({
     ...req.body,
     createdBy: req.user.id,
@@ -16,6 +17,7 @@ export const createSchedule = async (req: any, res: Response) => {
 
 export const getSchedules = async (req: Request, res: Response) => {
   try {
+    console.log(process.env.DB_NAME, process.env.MONGO_URI,);
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Number(req.query.limit) || 10, 50);
     const search = String(req.query.q || "").trim();

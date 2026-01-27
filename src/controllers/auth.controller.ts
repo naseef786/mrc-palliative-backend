@@ -6,6 +6,7 @@ import { Request, Response } from "express";
 export const signup = async (req: Request, res: Response) => {
 
   const { name, email, password, role, phone, bloodGroup, dob, address, emergencyContact } = req.body;
+  console.log(process.env.DB_NAME, process.env.MONGO_URI,);
 
   try {
     if (!name || !email || !password || !phone) {
