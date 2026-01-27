@@ -1,24 +1,30 @@
-import { MongoClient, ServerApiVersion } from 'mongodb';
+import { MongoClient, MongoClientOptions } from 'mongodb';
+import { attachDatabasePool } from '@vercel/functions';
 
-const uri = process.env.MONGO_URI as any;
+const options: MongoClientOptions = {
+  appName: "devrel.vercel.integration",
+  maxIdleTimeMS: 5000
+};
 
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
-});
+const uri = process.env.MONGODB_URI;
+if (!uri) {
+  throw new Error("MONGODB_URI is missing from your .env file");
+}
 
-// Rename 'run' to 'connectDB' and export it
+const client = new MongoClient(uri, options);
+
+// Attach for Vercel lifecycle management
+attachDatabasePool(client);
+
+// This is what server.ts is looking for!
 export const connectDB = async () => {
   try {
     await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    return client;
+    console.log("Successfully connected to MongoDB");
   } catch (error) {
-    console.error("MongoDB connection failed:", error);
-    process.exit(1); // Stop the server if DB fails
+    console.error("Failed to connect to MongoDB:", error);
+    process.exit(1);
   }
 };
+
+export default client;
