@@ -6,7 +6,7 @@ import patientRoutes from "./routes/patient.routes";
 import volunteerRoutes from "./routes/volunteer.routes";
 import scheduleRoutes from "./routes/schedule.routes";
 import analyticsRoutes from "./routes/analytics.routes";
-import { connectDB } from "./config/db";
+
 
 const app = express();
 

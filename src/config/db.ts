@@ -1,14 +1,24 @@
-import mongoose from "mongoose";
+import { MongoClient, ServerApiVersion } from 'mongodb';
 
+const uri = process.env.MONGO_URI as any;
+
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+// Rename 'run' to 'connectDB' and export it
 export const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI as string, {
-      dbName: process.env.DB_NAME, // optional but recommended
-    });
-
-    console.log(`✅ MongoDB Atlas connected: ${conn.connection.host}`);
+    await client.connect();
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    return client;
   } catch (error) {
-    console.error("❌ MongoDB connection error", error);
-    process.exit(1);
+    console.error("MongoDB connection failed:", error);
+    process.exit(1); // Stop the server if DB fails
   }
 };
