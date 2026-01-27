@@ -20,7 +20,7 @@ app.use(async (req, res, next) => {
     } catch (err) {
         console.log(error);
 
-        res.status(500).json({ error: "Database connection failed" });
+        res.status(500).json({ error: "Database connection failed", err: error });
     }
 });
 app.use("/api/auth", authRoutes);
