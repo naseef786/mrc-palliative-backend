@@ -7,6 +7,7 @@ import volunteerRoutes from "./routes/volunteer.routes";
 import scheduleRoutes from "./routes/schedule.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import { connectDB } from "./config/db";
+import { error } from "node:console";
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.use(async (req, res, next) => {
         await connectDB();
         next();
     } catch (err) {
+        console.log(error);
+
         res.status(500).json({ error: "Database connection failed" });
     }
 });
