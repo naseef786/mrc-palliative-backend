@@ -6,12 +6,20 @@ import patientRoutes from "./routes/patient.routes";
 import volunteerRoutes from "./routes/volunteer.routes";
 import scheduleRoutes from "./routes/schedule.routes";
 import analyticsRoutes from "./routes/analytics.routes";
+import { connectDB } from "./config/db";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        res.status(500).json({ error: "Database connection failed" });
+    }
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/volunteers", volunteerRoutes);
