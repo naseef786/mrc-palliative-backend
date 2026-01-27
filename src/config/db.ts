@@ -1,30 +1,31 @@
-import { MongoClient, MongoClientOptions } from 'mongodb';
-import { attachDatabasePool } from '@vercel/functions';
+import mongoose from "mongoose";
 
-const options: MongoClientOptions = {
-  appName: "devrel.vercel.integration",
-  maxIdleTimeMS: 5000
-};
+const MONGODB_URI = process.env.MONGODB_URI as string;
 
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  throw new Error("MONGODB_URI is missing from your .env file");
+if (!MONGODB_URI) {
+  throw new Error("MONGODB_URI is missing");
 }
 
-const client = new MongoClient(uri, options);
-
-// Attach for Vercel lifecycle management
-attachDatabasePool(client);
-
-// This is what server.ts is looking for!
-export const connectDB = async () => {
-  try {
-    await client.connect();
-    console.log("Successfully connected to MongoDB");
-  } catch (error) {
-    console.error("Failed to connect to MongoDB:", error);
-    process.exit(1);
-  }
+type Cached = {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
 };
 
-export default client;
+let cached = (global as any).mongoose as Cached;
+
+if (!cached) {
+  cached = (global as any).mongoose = { conn: null, promise: null };
+}
+
+export const connectDB = async () => {
+  if (cached.conn) return cached.conn;
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI, {
+      bufferCommands: false,
+    });
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
+};

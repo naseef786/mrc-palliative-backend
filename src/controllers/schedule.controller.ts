@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import Schedule from "../models/Schedule";
-import { log } from "node:console";
+import { connectDB } from "../config/db";
 
 // CREATE
 export const createSchedule = async (req: any, res: Response) => {
+  await connectDB();
   const schedule = await Schedule.create({
     ...req.body,
     createdBy: req.user.id,
@@ -15,6 +16,7 @@ export const createSchedule = async (req: any, res: Response) => {
 
 export const getSchedules = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     console.log(process.env.DB_NAME, process.env.MONGO_URI,);
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Number(req.query.limit) || 10, 50);
@@ -80,8 +82,7 @@ export const getSchedules = async (req: Request, res: Response) => {
 
 // UPDATE
 export const updateSchedule = async (req: Request, res: Response) => {
-  console.log(req?.body, req.params?.id);
-
+  await connectDB();
   const schedule = await Schedule.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -94,12 +95,14 @@ export const updateSchedule = async (req: Request, res: Response) => {
 
 // DELETE
 export const deleteSchedule = async (req: Request, res: Response) => {
+  await connectDB();
   await Schedule.findByIdAndDelete(req.params.id);
   res.json({ success: true });
 };
 
 // ASSIGN / UNASSIGN
 export const assignSelf = async (req: any, res: Response) => {
+  await connectDB();
   console.log(JSON?.stringify(req.params));
   const schedule = await Schedule.findByIdAndUpdate(
     req.params.id,
@@ -114,6 +117,7 @@ export const assignSelf = async (req: any, res: Response) => {
 };
 
 export const unassignSelf = async (req: Request, res: Response) => {
+  await connectDB();
   const schedule = await Schedule.findByIdAndUpdate(
     req.params.id,
     {
@@ -129,6 +133,7 @@ export const unassignSelf = async (req: Request, res: Response) => {
 
 export const getAssignedSchedules = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     const volunteerId = req.user?.id as string;
 
     if (!volunteerId) {
@@ -186,6 +191,7 @@ export const getAssignedSchedules = async (req: Request, res: Response) => {
 // PATCH /api/schedules/:id/status
 export const updateScheduleStatus = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     const { id } = req.params;
     const { status } = req.body as { status: "pending" | "in-progress" | "completed" };
     console.log(id, status, "{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}");

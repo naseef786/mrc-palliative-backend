@@ -2,8 +2,9 @@ import User from "../models/User";
 import bcrypt from "bcryptjs";
 import { signToken } from "../utils/jwt";
 import { Request, Response } from "express";
-
+import { connectDB } from "../config/db";
 export const signup = async (req: Request, res: Response) => {
+  await connectDB();
 
   const { name, email, password, role, phone, bloodGroup, dob, address, emergencyContact } = req.body;
   console.log(process.env.DB_NAME, process.env.MONGO_URI,);
@@ -43,6 +44,7 @@ export const signup = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
+  await connectDB();
   const { email, password } = req.body;
   console.log(email, password);
   // console.log("Mongoose readyState:", mongoose.connection.readyState);

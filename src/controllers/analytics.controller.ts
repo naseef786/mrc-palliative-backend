@@ -2,9 +2,11 @@ import { Request, Response } from "express";
 import Schedule from "../models/Schedule";
 import Patient from "../models/Patient";
 import User from "../models/User";
+import { connectDB } from "../config/db";
 
 export const dashboardAnalytics = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     const monthQuery = req.query.month as string; // 1-12
     const yearQuery = req.query.year as string;
 

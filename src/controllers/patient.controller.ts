@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Patient from "../models/Patient";
+import { connectDB } from "../config/db";
 
 /**
  * GET /patients
@@ -7,6 +8,7 @@ import Patient from "../models/Patient";
  */
 export const getPatients = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const search = (req.query.search as string) || "";
@@ -42,6 +44,7 @@ export const getPatients = async (req: Request, res: Response) => {
  */
 export const getPatientById = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     const patient = await Patient.findById(req.params.id);
 
     if (!patient) {
@@ -59,6 +62,7 @@ export const getPatientById = async (req: Request, res: Response) => {
  */
 export const createPatient = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     const { name, dob, emergencyContact } = req.body;
 
     if (!name || !dob || !emergencyContact) {
@@ -79,6 +83,7 @@ export const createPatient = async (req: Request, res: Response) => {
  */
 export const updatePatient = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     const patient = await Patient.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -100,6 +105,7 @@ export const updatePatient = async (req: Request, res: Response) => {
  */
 export const deletePatient = async (req: Request, res: Response) => {
   try {
+    await connectDB();
     const patient = await Patient.findByIdAndDelete(req.params.id);
 
     if (!patient) {

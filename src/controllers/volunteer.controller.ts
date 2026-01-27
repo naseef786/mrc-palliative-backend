@@ -1,6 +1,8 @@
+import { connectDB } from "../config/db";
 import User from "../models/User";
 
 export const getVolunteers = async (req: any, res: any) => {
+  await connectDB();
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const search = req.query.search || "";
@@ -38,6 +40,7 @@ export const getVolunteers = async (req: any, res: any) => {
 
 
 export const updateVolunteer = async (req: any, res: any) => {
+  await connectDB();
   const volunteer = await User.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -48,6 +51,7 @@ export const updateVolunteer = async (req: any, res: any) => {
 };
 
 export const deleteVolunteer = async (req: any, res: any) => {
+  await connectDB();
   await User.findByIdAndDelete(req.params.id);
   res.json({ success: true });
 };
