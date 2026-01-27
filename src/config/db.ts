@@ -25,6 +25,7 @@ export const connectDB = async () => {
 
     cached.promise = mongoose.connect(uri, {
       dbName: process.env.DB_NAME,
+      family: 4, // <--- Add this! It forces Mongoose to use IPv4
       // --- TIMEOUT UPDATES START HERE ---
       // How long to wait for the initial connection/discovery
       serverSelectionTimeoutMS: 30000, // Increased from 10k to 30k
