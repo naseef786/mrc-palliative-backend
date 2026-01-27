@@ -1,42 +1,39 @@
-// lib/mongo.ts
 import mongoose from "mongoose";
+import { attachDatabasePool } from "@vercel/functions";
 
-// Extend globalThis to include mongoose caching
 declare global {
-  // eslint-disable-next-line no-var
   var mongoose: { conn: mongoose.Mongoose | null; promise: Promise<mongoose.Mongoose> | null };
 }
 
-let cached = globalThis.mongoose;
-
+let cached = global.mongoose;
 if (!cached) {
-  cached = globalThis.mongoose = { conn: null, promise: null };
+  cached = global.mongoose = { conn: null, promise: null };
 }
 
 export const connectDB = async () => {
-  if (cached.conn) {
-    console.log(`✅ MongoDB Atlas already connected: ${cached.conn.connection.host}`);
-    return cached.conn;
-  }
+  if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
     const uri = process.env.MONGO_URI as string;
-    if (!uri) throw new Error("MONGO_URI is not defined in environment variables");
 
-    cached.promise = mongoose.connect(uri, {
+    const opts = {
       dbName: process.env.DB_NAME,
-      family: 4, // <--- Add this! It forces Mongoose to use IPv4
-      // --- TIMEOUT UPDATES START HERE ---
-      // How long to wait for the initial connection/discovery
-      serverSelectionTimeoutMS: 30000, // Increased from 10k to 30k
-      // How long to wait for a single socket operation
-      socketTimeoutMS: 45000,
-      // How often the driver checks the server status
-      heartbeatFrequencyMS: 2000,
-      // --- TIMEOUT UPDATES END HERE ---
-    }).then((mongoose) => {
-      console.log(`✅ MongoDB Atlas connected: ${mongoose.connection.host}`);
-      return mongoose;
+      serverSelectionTimeoutMS: 30000,
+      family: 4,
+    };
+
+    cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
+      // --- VERCEL SPECIFIC POOLING ---
+      // We get the underlying MongoDB driver client and "attach" it
+      const client = mongooseInstance.connection.getClient();
+      attachDatabasePool(client);
+      // -------------------------------
+
+      console.log("🚀 Connection pooled and active");
+      return mongooseInstance;
+    }).catch(err => {
+      cached.promise = null;
+      throw err;
     });
   }
 
