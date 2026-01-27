@@ -5,6 +5,6 @@ import { role } from "../middleware/role.middleware";
 
 const router = Router();
 
-router.get("/", auth, role(["admin"]), dashboardAnalytics);
+router.get("/", auth, dashboardAnalytics);
 
 export default router;

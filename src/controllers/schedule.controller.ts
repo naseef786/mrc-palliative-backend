@@ -125,3 +125,83 @@ export const unassignSelf = async (req: Request, res: Response) => {
 
   res.json(schedule);
 };
+
+
+export const getAssignedSchedules = async (req: Request, res: Response) => {
+  try {
+    const volunteerId = req.user?.id as string;
+
+    if (!volunteerId) {
+      return res.status(400).json({ message: "volunteerId is required" });
+    }
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const search = (req.query.search as string) || "";
+
+    const query: any = {
+      assignedVolunteer: volunteerId,
+    };
+
+    if (search) {
+      query.info = { $regex: search, $options: "i" };
+    }
+    const [total, schedules] = await Promise.all([
+      Schedule.countDocuments(query),
+
+      Schedule.find(query)
+        .populate({
+          path: "patient",
+          select: "name age gender phone address bloodGroup medicalHistory", // adjust fields
+        })
+        .populate({
+          path: "assignedVolunteer",
+          select: "name email phone role",
+        })
+        .sort({ date: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+    ]);
+
+
+    const nextPage = total > page * limit ? page + 1 : null;
+
+    res.json({
+      data: schedules,
+      pagination: {
+        page,
+        limit,
+        total,
+        nextPage,
+      },
+    });
+  } catch (error) {
+    console.error("Get Assigned Schedules Error:", error);
+    res.status(500).json({ message: "Failed to fetch schedules" });
+  }
+};
+
+
+// PATCH /api/schedules/:id/status
+export const updateScheduleStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body as { status: "pending" | "in-progress" | "completed" };
+    console.log(id, status, "{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}");
+
+    const schedule = await Schedule.findById(id);
+    if (!schedule) return res.status(404).json({ message: "Schedule not found" });
+
+    schedule.status = status;
+    await schedule.save();
+
+    res.json(schedule);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update schedule status" });
+  }
+};
+
+
+

@@ -4,6 +4,8 @@ import { signToken } from "../utils/jwt";
 import { Request, Response } from "express";
 
 export const signup = async (req: Request, res: Response) => {
+  console.log("{{{{{{{{{{{{{{{{{{{{{{{{{", req.body);
+
   const { name, email, password, role, phone, bloodGroup, dob, address, emergencyContact } = req.body;
 
   try {

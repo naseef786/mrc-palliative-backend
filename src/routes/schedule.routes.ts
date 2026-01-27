@@ -6,6 +6,8 @@ import {
   deleteSchedule,
   assignSelf,
   unassignSelf,
+  getAssignedSchedules,
+  updateScheduleStatus,
 } from "../controllers/schedule.controller";
 import { auth } from "../middleware/auth.middleware";
 
@@ -19,5 +21,14 @@ router.delete("/:id", auth, deleteSchedule);
 
 router.post("/:id/assign", auth, assignSelf);
 router.post("/:id/unassign", auth, unassignSelf);
+
+
+// Get assigned schedules for volunteer (paginated)
+router.get("/assigned", auth, getAssignedSchedules);
+
+// Update schedule status
+router.patch("/:id/status", auth, updateScheduleStatus);
+
+
 
 export default router;
