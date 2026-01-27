@@ -25,7 +25,14 @@ export const connectDB = async () => {
 
     cached.promise = mongoose.connect(uri, {
       dbName: process.env.DB_NAME,
-      serverSelectionTimeoutMS: 10000,
+      // --- TIMEOUT UPDATES START HERE ---
+      // How long to wait for the initial connection/discovery
+      serverSelectionTimeoutMS: 30000, // Increased from 10k to 30k
+      // How long to wait for a single socket operation
+      socketTimeoutMS: 45000,
+      // How often the driver checks the server status
+      heartbeatFrequencyMS: 2000,
+      // --- TIMEOUT UPDATES END HERE ---
     }).then((mongoose) => {
       console.log(`✅ MongoDB Atlas connected: ${mongoose.connection.host}`);
       return mongoose;
